@@ -9,7 +9,7 @@ catalogRouter.get('/search', requireAuth, async (req, res, next) => {
     const q = (req.query.q || '').toString().trim();
     if (!q) return res.json([]);
 
-    const params = new URLSearchParams({ q, type: 'track', limit: '20' });
+    const params = new URLSearchParams({ q, type: 'track' });
     const data = await spotifyApiFetch(`/search?${params.toString()}`);
     const tracks = (data.tracks?.items ?? []).map((track) => ({
       uri: track.uri,
