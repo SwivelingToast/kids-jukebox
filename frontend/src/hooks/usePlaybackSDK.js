@@ -19,6 +19,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
   const [ready, setReady] = useState(false);
   const [deviceId, setDeviceId] = useState(null);
   const [reconnecting, setReconnecting] = useState(false);
+  const [error, setError] = useState(null);
   const playerRef = useRef(null);
   const lastKnownRef = useRef(null); // { uri, position }
   const onTrackEndRef = useRef(onTrackEnd);
@@ -44,6 +45,26 @@ export function usePlaybackSDK({ onTrackEnd }) {
 
       player.addListener('not_ready', () => {
         setReconnecting(true);
+      });
+
+      // Without these, failures here (non-Premium account, no DRM/EME
+      // support in the browser, expired token, etc.) are otherwise
+      // completely silent - no audio, no error, no clue why.
+      player.addListener('initialization_error', ({ message }) => {
+        console.error('Spotify SDK initialization_error:', message);
+        setError(`Player failed to initialize: ${message}`);
+      });
+      player.addListener('authentication_error', ({ message }) => {
+        console.error('Spotify SDK authentication_error:', message);
+        setError(`Spotify authentication failed: ${message}`);
+      });
+      player.addListener('account_error', ({ message }) => {
+        console.error('Spotify SDK account_error:', message);
+        setError(`Spotify account error (Premium required): ${message}`);
+      });
+      player.addListener('playback_error', ({ message }) => {
+        console.error('Spotify SDK playback_error:', message);
+        setError(`Playback error: ${message}`);
       });
 
       player.addListener('player_state_changed', (state) => {
@@ -75,23 +96,45 @@ export function usePlaybackSDK({ onTrackEnd }) {
 
   async function playTrackUri(uri) {
     const id = deviceId;
-    if (!id) return;
+    if (!id) {
+      const message = 'No Spotify Connect device yet - the player has not finished initializing.';
+      console.error(message);
+      setError(message);
+      return false;
+    }
     const accessToken = await getAccessToken();
 
     // Reclaim the device before every play call rather than trying to
     // detect whether something else took it over in the meantime.
-    await fetch('https://api.spotify.com/v1/me/player', {
+    const transferRes = await fetch('https://api.spotify.com/v1/me/player', {
       method: 'PUT',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ device_ids: [id], play: false }),
     });
+    if (!transferRes.ok) {
+      const body = await transferRes.text().catch(() => '');
+      const message = `Failed to transfer playback to this device: ${transferRes.status} ${body}`;
+      console.error(message);
+      setError(message);
+      return false;
+    }
 
-    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${id}`, {
+    const playRes = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${id}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ uris: [uri] }),
     });
+    if (!playRes.ok) {
+      const body = await playRes.text().catch(() => '');
+      const message = `Failed to start playback: ${playRes.status} ${body}`;
+      console.error(message);
+      setError(message);
+      return false;
+    }
+
+    setError(null);
+    return true;
   }
 
-  return { ready, deviceId, reconnecting, playTrackUri };
+  return { ready, deviceId, reconnecting, error, playTrackUri };
 }

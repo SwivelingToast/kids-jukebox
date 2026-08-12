@@ -15,14 +15,14 @@ export default function Home() {
   const advanceAndPlay = async () => {
     const state = await queue.advance();
     if (state.nowPlaying) {
-      await playTrackUri(state.nowPlaying.uri);
-      queue.reportPlayback(true);
+      const started = await playTrackUri(state.nowPlaying.uri);
+      queue.reportPlayback(started);
     } else {
       queue.reportPlayback(false);
     }
   };
 
-  const { ready, reconnecting, playTrackUri } = usePlaybackSDK({
+  const { ready, reconnecting, error: playbackError, playTrackUri } = usePlaybackSDK({
     onTrackEnd: advanceAndPlay,
   });
 
@@ -53,6 +53,7 @@ export default function Home() {
           queue={queue.queue}
           onSkip={handleSkip}
           reconnecting={reconnecting}
+          playbackError={playbackError}
         />
         <SearchBox query={query} onQueryChange={setQuery} />
       </div>

@@ -1,4 +1,4 @@
-export default function NowPlayingBar({ nowPlaying, queue, onSkip, reconnecting }) {
+export default function NowPlayingBar({ nowPlaying, queue, onSkip, reconnecting, playbackError }) {
   return (
     <div className="flex items-center gap-4 rounded-2xl bg-white/80 p-4 shadow-md">
       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-200">
@@ -13,12 +13,16 @@ export default function NowPlayingBar({ nowPlaying, queue, onSkip, reconnecting 
         <p className="truncate text-xl font-bold text-violet-950">
           {nowPlaying ? nowPlaying.name : 'Nothing playing yet'}
         </p>
-        <p className="truncate text-sm font-medium text-violet-500">
-          {reconnecting
-            ? 'Reconnecting…'
-            : queue.length > 0
-              ? `${queue.length} song${queue.length === 1 ? '' : 's'} up next`
-              : 'Tap a song to add it!'}
+        <p
+          className={`truncate text-sm font-medium ${playbackError ? 'text-red-500' : 'text-violet-500'}`}
+        >
+          {playbackError
+            ? playbackError
+            : reconnecting
+              ? 'Reconnecting…'
+              : queue.length > 0
+                ? `${queue.length} song${queue.length === 1 ? '' : 's'} up next`
+                : 'Tap a song to add it!'}
         </p>
       </div>
 
