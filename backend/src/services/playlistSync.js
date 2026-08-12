@@ -74,7 +74,12 @@ export async function linkPlaylist(input) {
     throw err;
   }
 
-  const meta = await spotifyApiFetch(`/playlists/${spotifyPlaylistId}?fields=id,name,images`);
+  const meta = await spotifyApiFetch(
+    `/playlists/${spotifyPlaylistId}?fields=id,name,images,owner(id,display_name),public,collaborative`
+  );
+  console.log(
+    `Linking playlist ${spotifyPlaylistId}: owner=${meta.owner?.id} public=${meta.public} collaborative=${meta.collaborative}`
+  );
   const tracks = await fetchAllTracks(spotifyPlaylistId);
 
   const existing = db
