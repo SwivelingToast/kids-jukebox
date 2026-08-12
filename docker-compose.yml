@@ -1,5 +1,6 @@
 services:
   kids-jukebox:
+    image: ghcr.io/swivelingtoast/kids-jukebox:latest
     build: .
     restart: unless-stopped
     ports:

@@ -21,11 +21,28 @@ A touchscreen jukebox for kids, backed by a Spotify playlist a parent controls. 
    - `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI` — from your Spotify Developer app.
    - `SESSION_SECRET` — any long random string.
    - `PARENT_INITIAL_PIN` — a PIN of your choosing (4+ digits). This seeds the parent PIN **once**, the very first time the server starts with an empty database. It is never re-read after that, even if you edit `.env` later — the server refuses to boot if this variable is missing at all, but it stops mattering after first boot.
-2. `docker compose up --build -d`
+2. `docker compose up -d` — see [Deploying](#deploying) below for whether this builds locally or pulls a prebuilt image.
 3. Point Caddy at this container's port `3000`.
 4. Visit `https://your-domain.example/parent` and log in with `PARENT_INITIAL_PIN`. You'll be **forced** to set a new PIN before you can do anything else — this replaces the seed value.
 5. Connect Spotify, then link a playlist (paste its share link).
 6. Open `https://your-domain.example/` on the tablet and add it to the home screen for a fullscreen feel.
+
+## Deploying
+
+Every push to `main` triggers [`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml), which builds the image and pushes it to `ghcr.io/swivelingtoast/kids-jukebox:latest`. `docker-compose.yml` lists both `image:` and `build: .`, so:
+
+- **Pulling the published image (no source needed on the server)**: copy just `docker-compose.yml` and `.env` to the media server, then:
+  ```bash
+  docker compose pull
+  docker compose up -d
+  ```
+- **Building locally instead** (e.g. testing an uncommitted change): `docker compose up --build -d` — this builds from the local `Dockerfile` and ignores the remote image for that run.
+
+**Package visibility**: GitHub Container Registry packages are private by default, tied to the repo. If `docker compose pull` fails with an auth error, either:
+- make the package public — on GitHub, go to the repo → **Packages** (right sidebar) → `kids-jukebox` → **Package settings** → **Change visibility** → Public, or
+- keep it private and `docker login ghcr.io` on the media server once with a GitHub personal access token that has `read:packages` scope.
+
+Since this app already handles a Spotify refresh token and a family PIN, keeping the image private (and just logging in once) is the more consistent choice with the rest of this app's security posture — but either works.
 
 ### Forgotten PIN
 
