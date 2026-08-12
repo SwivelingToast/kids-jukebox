@@ -31,7 +31,7 @@ function mapTrackItem(item) {
 
 async function fetchAllTracks(playlistId) {
   const tracks = [];
-  let nextPath = `/playlists/${playlistId}/tracks?limit=100`;
+  let nextPath = `/playlists/${playlistId}/tracks`;
   while (nextPath) {
     const page = await spotifyApiFetch(nextPath);
     for (const item of page.items) {
