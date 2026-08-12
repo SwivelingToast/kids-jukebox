@@ -2,6 +2,7 @@ services:
   kids-jukebox:
     image: ghcr.io/swivelingtoast/kids-jukebox:latest
     build: .
+    init: true
     restart: unless-stopped
     ports:
       - "3000:3000"
