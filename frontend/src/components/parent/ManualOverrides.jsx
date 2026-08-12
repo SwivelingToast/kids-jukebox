@@ -6,6 +6,7 @@ export default function ManualOverrides({ onLibraryChanged }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState(null);
 
   const reloadOverrides = async () => {
     setOverrides(await api.get('/library/overrides'));
@@ -19,8 +20,11 @@ export default function ManualOverrides({ onLibraryChanged }) {
     e.preventDefault();
     if (!query.trim()) return;
     setSearching(true);
+    setSearchError(null);
     try {
       setResults(await api.get(`/catalog/search?q=${encodeURIComponent(query)}`));
+    } catch (err) {
+      setSearchError(err.message);
     } finally {
       setSearching(false);
     }
@@ -64,6 +68,7 @@ export default function ManualOverrides({ onLibraryChanged }) {
             Search
           </button>
         </form>
+        {searchError ? <p className="mt-2 text-sm font-semibold text-red-600">{searchError}</p> : null}
 
         <ul className="mt-3 flex flex-col gap-2">
           {results.map((track) => (

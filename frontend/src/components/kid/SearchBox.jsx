@@ -23,7 +23,7 @@ export default function SearchBox({ query, onQueryChange }) {
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         placeholder="Search songs..."
-        className="h-16 flex-1 rounded-full border-4 border-violet-200 px-6 text-3xl font-semibold text-violet-950 shadow-inner focus:outline-none focus:border-violet-400"
+        className="h-16 min-w-0 flex-1 rounded-full border-4 border-violet-200 px-6 text-3xl font-semibold text-violet-950 shadow-inner focus:outline-none focus:border-violet-400"
       />
       <button
         onClick={() => {

@@ -14,7 +14,8 @@ export function getAuthorizeUrl(state) {
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: env.spotifyClientId,
-    scope: 'streaming user-read-email user-read-private user-modify-playback-state user-read-playback-state',
+    scope:
+      'streaming user-read-email user-read-private user-modify-playback-state user-read-playback-state playlist-read-private playlist-read-collaborative',
     redirect_uri: env.spotifyRedirectUri,
     state,
   });
