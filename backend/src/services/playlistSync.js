@@ -31,7 +31,7 @@ function mapTrackItem(item) {
 
 async function fetchAllTracks(playlistId) {
   const tracks = [];
-  let nextPath = `/playlists/${playlistId}/tracks`;
+  let nextPath = `/playlists/${playlistId}/items`;
   while (nextPath) {
     const page = await spotifyApiFetch(nextPath);
     for (const item of page.items) {
@@ -74,12 +74,7 @@ export async function linkPlaylist(input) {
     throw err;
   }
 
-  const meta = await spotifyApiFetch(
-    `/playlists/${spotifyPlaylistId}?fields=id,name,images,owner(id,display_name),public,collaborative`
-  );
-  console.log(
-    `Linking playlist ${spotifyPlaylistId}: owner=${meta.owner?.id} public=${meta.public} collaborative=${meta.collaborative}`
-  );
+  const meta = await spotifyApiFetch(`/playlists/${spotifyPlaylistId}?fields=id,name,images`);
   const tracks = await fetchAllTracks(spotifyPlaylistId);
 
   const existing = db
