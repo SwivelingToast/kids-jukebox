@@ -18,11 +18,22 @@ export default function Home() {
       const started = await playTrackUri(state.nowPlaying.uri);
       queue.reportPlayback(started);
     } else {
+      // Nothing left queued - explicitly stop the device instead of
+      // leaving whatever was last playing running orphaned.
+      await pausePlayback();
       queue.reportPlayback(false);
     }
   };
 
-  const { ready, reconnecting, error: playbackError, playTrackUri } = usePlaybackSDK({
+  const {
+    ready,
+    reconnecting,
+    error: playbackError,
+    isPlaying,
+    playTrackUri,
+    pausePlayback,
+    togglePlayback,
+  } = usePlaybackSDK({
     onTrackEnd: advanceAndPlay,
   });
 
@@ -54,6 +65,8 @@ export default function Home() {
           onSkip={handleSkip}
           reconnecting={reconnecting}
           playbackError={playbackError}
+          isPlaying={isPlaying}
+          onTogglePlayback={togglePlayback}
         />
         <SearchBox query={query} onQueryChange={setQuery} />
       </div>

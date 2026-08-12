@@ -1,4 +1,12 @@
-export default function NowPlayingBar({ nowPlaying, queue, onSkip, reconnecting, playbackError }) {
+export default function NowPlayingBar({
+  nowPlaying,
+  queue,
+  onSkip,
+  reconnecting,
+  playbackError,
+  isPlaying,
+  onTogglePlayback,
+}) {
   return (
     <div className="flex items-center gap-4 rounded-2xl bg-white/80 p-4 shadow-md">
       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-200">
@@ -25,6 +33,16 @@ export default function NowPlayingBar({ nowPlaying, queue, onSkip, reconnecting,
                 : 'Tap a song to add it!'}
         </p>
       </div>
+
+      {nowPlaying ? (
+        <button
+          onClick={onTogglePlayback}
+          aria-label={isPlaying ? 'Pause song' : 'Play song'}
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-violet-500 text-2xl text-white shadow-md active:scale-95"
+        >
+          {isPlaying ? '⏸' : '▶'}
+        </button>
+      ) : null}
 
       {nowPlaying ? (
         <button

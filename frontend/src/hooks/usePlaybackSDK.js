@@ -20,6 +20,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
   const [deviceId, setDeviceId] = useState(null);
   const [reconnecting, setReconnecting] = useState(false);
   const [error, setError] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const playerRef = useRef(null);
   const lastKnownRef = useRef(null); // { uri, position }
   const onTrackEndRef = useRef(onTrackEnd);
@@ -68,7 +69,12 @@ export function usePlaybackSDK({ onTrackEnd }) {
       });
 
       player.addListener('player_state_changed', (state) => {
-        if (!state) return;
+        if (!state) {
+          setIsPlaying(false);
+          return;
+        }
+        setIsPlaying(!state.paused);
+
         const current = { uri: state.track_window.current_track?.uri, position: state.position };
         const prev = lastKnownRef.current;
 
@@ -136,5 +142,43 @@ export function usePlaybackSDK({ onTrackEnd }) {
     return true;
   }
 
-  return { ready, deviceId, reconnecting, error, playTrackUri };
+  async function setPaused(paused) {
+    const id = deviceId;
+    if (!id) return false;
+    const accessToken = await getAccessToken();
+
+    const res = await fetch(
+      `https://api.spotify.com/v1/me/player/${paused ? 'pause' : 'play'}?device_id=${id}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      const message = `Failed to ${paused ? 'pause' : 'resume'} playback: ${res.status} ${body}`;
+      console.error(message);
+      setError(message);
+      return false;
+    }
+    setError(null);
+    setIsPlaying(!paused);
+    return true;
+  }
+
+  // Explicitly stop the device rather than leaving whatever was last
+  // playing running orphaned when there's nothing left queued.
+  const pausePlayback = () => setPaused(true);
+  const togglePlayback = () => setPaused(isPlaying);
+
+  return {
+    ready,
+    deviceId,
+    reconnecting,
+    error,
+    isPlaying,
+    playTrackUri,
+    pausePlayback,
+    togglePlayback,
+  };
 }
