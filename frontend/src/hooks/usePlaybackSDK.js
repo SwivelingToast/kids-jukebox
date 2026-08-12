@@ -21,10 +21,27 @@ export function usePlaybackSDK({ onTrackEnd }) {
   const [reconnecting, setReconnecting] = useState(false);
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0); // 0-1, informational only
+  const progressRef = useRef({ position: 0, duration: 0, updatedAt: Date.now(), paused: true });
   const playerRef = useRef(null);
   const lastKnownRef = useRef(null); // { uri, position }
   const onTrackEndRef = useRef(onTrackEnd);
   onTrackEndRef.current = onTrackEnd;
+  // True while we're actively issuing our own transfer+play sequence. The
+  // transfer call alone triggers a player_state_changed event reporting the
+  // *previous* track as paused at position 0 - which otherwise looks
+  // identical to that track having ended naturally, spuriously firing
+  // onTrackEnd a second time and racing with the play we're already doing.
+  const isTransitioningRef = useRef(false);
+  const transitionTimeoutRef = useRef(null);
+
+  function clearTransitioning() {
+    isTransitioningRef.current = false;
+    if (transitionTimeoutRef.current) {
+      clearTimeout(transitionTimeoutRef.current);
+      transitionTimeoutRef.current = null;
+    }
+  }
 
   useEffect(() => {
     loadSdkScript();
@@ -71,14 +88,22 @@ export function usePlaybackSDK({ onTrackEnd }) {
       player.addListener('player_state_changed', (state) => {
         if (!state) {
           setIsPlaying(false);
+          progressRef.current = { position: 0, duration: 0, updatedAt: Date.now(), paused: true };
           return;
         }
         setIsPlaying(!state.paused);
+        progressRef.current = {
+          position: state.position,
+          duration: state.duration,
+          updatedAt: Date.now(),
+          paused: state.paused,
+        };
 
         const current = { uri: state.track_window.current_track?.uri, position: state.position };
         const prev = lastKnownRef.current;
 
         const looksLikeTrackEnd =
+          !isTransitioningRef.current &&
           prev &&
           prev.uri === current.uri &&
           prev.position > 0 &&
@@ -87,6 +112,12 @@ export function usePlaybackSDK({ onTrackEnd }) {
 
         if (looksLikeTrackEnd) {
           onTrackEndRef.current?.();
+        }
+
+        // Once the new track is confirmed actually playing, our own
+        // transfer/play sequence is done and end-detection can resume.
+        if (isTransitioningRef.current && !state.paused) {
+          clearTransitioning();
         }
 
         lastKnownRef.current = current;
@@ -100,6 +131,25 @@ export function usePlaybackSDK({ onTrackEnd }) {
     };
   }, []);
 
+  // The SDK only fires player_state_changed on actual state transitions
+  // (play/pause/seek/track change), not continuously - so interpolate a
+  // smooth, informational-only progress fraction between those events
+  // based on elapsed wall-clock time.
+  useEffect(() => {
+    function tick() {
+      const { position, duration, updatedAt, paused } = progressRef.current;
+      if (!duration) {
+        setProgress(0);
+        return;
+      }
+      const elapsed = paused ? 0 : Date.now() - updatedAt;
+      setProgress(Math.min(1, (position + elapsed) / duration));
+    }
+    tick();
+    const interval = setInterval(tick, 500);
+    return () => clearInterval(interval);
+  }, []);
+
   async function playTrackUri(uri) {
     const id = deviceId;
     if (!id) {
@@ -109,6 +159,11 @@ export function usePlaybackSDK({ onTrackEnd }) {
       return false;
     }
     const accessToken = await getAccessToken();
+
+    isTransitioningRef.current = true;
+    // Safety net: if we never see a confirming "playing" state (e.g. a
+    // network hiccup), don't leave end-detection suppressed forever.
+    transitionTimeoutRef.current = setTimeout(clearTransitioning, 5000);
 
     // Reclaim the device before every play call rather than trying to
     // detect whether something else took it over in the meantime.
@@ -122,6 +177,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
       const message = `Failed to transfer playback to this device: ${transferRes.status} ${body}`;
       console.error(message);
       setError(message);
+      clearTransitioning();
       return false;
     }
 
@@ -135,6 +191,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
       const message = `Failed to start playback: ${playRes.status} ${body}`;
       console.error(message);
       setError(message);
+      clearTransitioning();
       return false;
     }
 
@@ -177,6 +234,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
     reconnecting,
     error,
     isPlaying,
+    progress,
     playTrackUri,
     pausePlayback,
     togglePlayback,

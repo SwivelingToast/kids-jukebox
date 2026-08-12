@@ -6,9 +6,10 @@ export default function NowPlayingBar({
   playbackError,
   isPlaying,
   onTogglePlayback,
+  progress = 0,
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl bg-white/80 p-4 shadow-md">
+    <div className="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-white/80 p-4 pb-5 shadow-md">
       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-200">
         {nowPlaying?.albumArtUrl ? (
           <img src={nowPlaying.albumArtUrl} alt="" className="h-full w-full object-cover" />
@@ -53,6 +54,20 @@ export default function NowPlayingBar({
           ⏭
         </button>
       ) : null}
+
+      <div
+        role="progressbar"
+        aria-hidden={!nowPlaying}
+        aria-valuenow={Math.round(progress * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1.5 bg-violet-100"
+      >
+        <div
+          className="h-full bg-violet-500 transition-[width] duration-300 ease-linear"
+          style={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }}
+        />
+      </div>
     </div>
   );
 }
