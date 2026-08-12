@@ -46,35 +46,33 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-violet-50">
-      <div className="flex items-center gap-4 p-4">
-        <SearchBox query={query} onQueryChange={setQuery} />
+    <div className="min-h-full overflow-x-hidden bg-violet-50">
+      <div className="sticky top-0 z-10 flex flex-col gap-3 bg-violet-50 p-4 pb-3 shadow-sm">
         <NowPlayingBar
           nowPlaying={queue.nowPlaying}
           queue={queue.queue}
           onSkip={handleSkip}
           reconnecting={reconnecting}
         />
-        <HiddenSettingsHandle />
+        <SearchBox query={query} onQueryChange={setQuery} />
       </div>
+      <HiddenSettingsHandle />
 
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <div className="flex h-full items-center justify-center text-2xl text-violet-400">
-            Loading songs…
-          </div>
-        ) : (
-          <AlbumGrid
-            tracks={filtered}
-            onSelect={handleSelect}
-            emptyMessage={
-              query
-                ? 'No songs match that search.'
-                : 'No songs yet — ask a grown-up to add some in Settings.'
-            }
-          />
-        )}
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-24 text-2xl text-violet-400">
+          Loading songs…
+        </div>
+      ) : (
+        <AlbumGrid
+          tracks={filtered}
+          onSelect={handleSelect}
+          emptyMessage={
+            query
+              ? 'No songs match that search.'
+              : 'No songs yet — ask a grown-up to add some in Settings.'
+          }
+        />
+      )}
     </div>
   );
 }

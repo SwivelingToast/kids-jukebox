@@ -19,8 +19,9 @@ export default function HiddenSettingsHandle() {
       onPointerDown={start}
       onPointerUp={cancel}
       onPointerLeave={cancel}
+      onContextMenu={(e) => e.preventDefault()}
       aria-label="Parent settings"
-      className="h-8 w-8 rounded-full opacity-20"
+      className="fixed bottom-8 right-8 z-50 h-8 w-8 touch-none select-none rounded-full bg-violet-950 opacity-40"
     />
   );
 }

@@ -16,7 +16,7 @@ export default function SearchBox({ query, onQueryChange }) {
   }
 
   return (
-    <div className="flex flex-1 items-center gap-3">
+    <div className="flex w-full items-center gap-3">
       <input
         autoFocus
         type="text"

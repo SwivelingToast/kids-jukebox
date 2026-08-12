@@ -3,7 +3,7 @@ import AlbumTile from './AlbumTile.jsx';
 export default function AlbumGrid({ tracks, onSelect, emptyMessage }) {
   if (tracks.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center p-8 text-center text-2xl font-semibold text-violet-400">
+      <div className="flex min-h-[50vh] items-center justify-center p-8 text-center text-2xl font-semibold text-violet-400">
         {emptyMessage}
       </div>
     );
