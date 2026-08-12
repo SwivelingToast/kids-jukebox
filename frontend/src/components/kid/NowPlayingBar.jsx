@@ -1,3 +1,10 @@
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 export default function NowPlayingBar({
   nowPlaying,
   queue,
@@ -7,6 +14,7 @@ export default function NowPlayingBar({
   isPlaying,
   onTogglePlayback,
   progress = 0,
+  positionMs = 0,
 }) {
   return (
     <div className="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-white/80 p-4 pb-5 shadow-md">
@@ -22,16 +30,24 @@ export default function NowPlayingBar({
         <p className="truncate text-xl font-bold text-violet-950">
           {nowPlaying ? nowPlaying.name : 'Nothing playing yet'}
         </p>
-        <p
-          className={`truncate text-sm font-medium ${playbackError ? 'text-red-500' : 'text-violet-500'}`}
-        >
-          {playbackError
-            ? playbackError
-            : reconnecting
-              ? 'Reconnecting…'
-              : queue.length > 0
-                ? `${queue.length} song${queue.length === 1 ? '' : 's'} up next`
-                : 'Tap a song to add it!'}
+        <p className="flex items-center gap-2">
+          <span
+            className={`truncate text-sm font-medium ${playbackError ? 'text-red-500' : 'text-violet-500'}`}
+          >
+            {playbackError
+              ? playbackError
+              : reconnecting
+                ? 'Reconnecting…'
+                : queue.length > 0
+                  ? `${queue.length} song${queue.length === 1 ? '' : 's'} up next`
+                  : 'Tap a song to add it!'}
+          </span>
+          {/* TEMP DEBUG: remove once the "starts at a random point" issue is confirmed fixed */}
+          {nowPlaying ? (
+            <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs font-bold text-amber-700">
+              {formatTime(positionMs)}
+            </span>
+          ) : null}
         </p>
       </div>
 

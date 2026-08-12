@@ -31,6 +31,7 @@ export default function Home() {
     error: playbackError,
     isPlaying,
     progress,
+    positionMs,
     playTrackUri,
     pausePlayback,
     togglePlayback,
@@ -69,6 +70,7 @@ export default function Home() {
           isPlaying={isPlaying}
           onTogglePlayback={togglePlayback}
           progress={progress}
+          positionMs={positionMs}
         />
         <SearchBox query={query} onQueryChange={setQuery} />
       </div>

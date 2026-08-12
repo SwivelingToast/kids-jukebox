@@ -22,6 +22,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // 0-1, informational only
+  const [positionMs, setPositionMs] = useState(0); // informational only
   const progressRef = useRef({ position: 0, duration: 0, updatedAt: Date.now(), paused: true });
   const playerRef = useRef(null);
   const lastKnownRef = useRef(null); // { uri, position }
@@ -140,10 +141,13 @@ export function usePlaybackSDK({ onTrackEnd }) {
       const { position, duration, updatedAt, paused } = progressRef.current;
       if (!duration) {
         setProgress(0);
+        setPositionMs(0);
         return;
       }
       const elapsed = paused ? 0 : Date.now() - updatedAt;
-      setProgress(Math.min(1, (position + elapsed) / duration));
+      const current = Math.min(position + elapsed, duration);
+      setProgress(current / duration);
+      setPositionMs(current);
     }
     tick();
     const interval = setInterval(tick, 500);
@@ -235,6 +239,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
     error,
     isPlaying,
     progress,
+    positionMs,
     playTrackUri,
     pausePlayback,
     togglePlayback,
