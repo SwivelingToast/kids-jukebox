@@ -15,9 +15,12 @@ export function parsePlaylistId(input) {
   return null;
 }
 
-function mapTrackItem(item) {
-  const track = item.track;
-  if (!track || !track.uri || track.is_local) return null;
+function mapTrackItem(entry) {
+  // Newer "Get Playlist Items" endpoint nests the track/episode under
+  // `item`, not the deprecated `track` field. `is_local` lives on the
+  // entry itself, not on the nested item.
+  const track = entry.item;
+  if (!track || !track.uri || entry.is_local || track.type !== 'track') return null;
   return {
     uri: track.uri,
     spotifyTrackId: track.id,
@@ -34,8 +37,8 @@ async function fetchAllTracks(playlistId) {
   let nextPath = `/playlists/${playlistId}/items`;
   while (nextPath) {
     const page = await spotifyApiFetch(nextPath);
-    for (const item of page.items) {
-      const mapped = mapTrackItem(item);
+    for (const entry of page.items) {
+      const mapped = mapTrackItem(entry);
       if (mapped) tracks.push(mapped);
     }
     nextPath = page.next ? page.next.replace('https://api.spotify.com/v1', '') : null;
