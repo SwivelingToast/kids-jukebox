@@ -28,7 +28,7 @@ export default function AlbumTile({ track, overlay = true, onTap }) {
         {overlay ? (
           <div className="absolute inset-0 flex items-center justify-center p-2">
             <p
-              className={`line-clamp-3 rounded-xl bg-black/20 px-3 py-2 text-center font-bold text-white ${titleSizeClass(title)}`}
+              className={`line-clamp-3 rounded-xl bg-black/40 px-3 py-2 text-center font-bold text-white ${titleSizeClass(title)}`}
             >
               {title}
             </p>
