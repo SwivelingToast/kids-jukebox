@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApprovedLibrary } from '../../hooks/useApprovedLibrary.js';
 import { useQueue } from '../../hooks/useQueue.js';
 import { usePlaybackSDK } from '../../hooks/usePlaybackSDK.js';
@@ -11,6 +11,16 @@ export default function Home() {
   const { filtered, loading, query, setQuery } = useApprovedLibrary();
   const queue = useQueue();
   const hasResumedRef = useRef(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const closeSearch = () => {
+    setQuery('');
+    setSearchOpen(false);
+  };
+  const handleToggleSearch = () => {
+    if (searchOpen) closeSearch();
+    else setSearchOpen(true);
+  };
 
   const advanceAndPlay = async () => {
     const state = await queue.advance();
@@ -58,8 +68,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-full overflow-x-hidden bg-violet-50">
-      <div className="sticky top-0 z-10 flex flex-col gap-3 bg-violet-50 p-4 pb-3 shadow-sm">
+    <div className="min-h-full overflow-x-hidden bg-black">
+      <div className="sticky top-0 z-10 flex flex-col gap-3 bg-black p-4 pb-3 shadow-sm">
         <NowPlayingBar
           nowPlaying={queue.nowPlaying}
           queue={queue.queue}
@@ -69,12 +79,16 @@ export default function Home() {
           isPlaying={isPlaying}
           onTogglePlayback={togglePlayback}
           progress={progress}
+          searchOpen={searchOpen}
+          onToggleSearch={handleToggleSearch}
         />
-        <SearchBox query={query} onQueryChange={setQuery} />
+        {searchOpen ? (
+          <SearchBox query={query} onQueryChange={setQuery} onClose={closeSearch} />
+        ) : null}
       </div>
       <HiddenSettingsHandle />
 
-      <div className="mx-4 mb-4 overflow-hidden rounded-3xl border-4 border-violet-200 bg-white/50">
+      <div className="mx-4 mb-4 overflow-hidden rounded-3xl border-4 border-violet-800 bg-violet-950">
         {loading ? (
           <div className="flex items-center justify-center py-24 text-2xl text-violet-400">
             Loading songs…

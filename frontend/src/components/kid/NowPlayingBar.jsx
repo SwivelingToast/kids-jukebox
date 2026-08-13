@@ -9,10 +9,20 @@ export default function NowPlayingBar({
   isPlaying,
   onTogglePlayback,
   progress = 0,
+  searchOpen,
+  onToggleSearch,
 }) {
   return (
-    <div className="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-white/80 p-4 pb-5 shadow-md">
-      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-200">
+    <div className="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-violet-900/90 p-4 pb-5 shadow-md">
+      <button
+        onClick={onToggleSearch}
+        aria-label={searchOpen ? 'Close search' : 'Search songs'}
+        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-2xl shadow-md active:scale-95"
+      >
+        {searchOpen ? '✕' : '🔍'}
+      </button>
+
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-800">
         {nowPlaying?.albumArtUrl ? (
           <img src={nowPlaying.albumArtUrl} alt="" className="h-full w-full object-cover" />
         ) : (
@@ -21,11 +31,11 @@ export default function NowPlayingBar({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xl font-bold text-violet-950">
+        <p className="truncate text-xl font-bold text-white">
           {nowPlaying ? nowPlaying.name : 'Nothing playing yet'}
         </p>
         <p
-          className={`truncate text-sm font-medium ${playbackError ? 'text-red-500' : 'text-violet-500'}`}
+          className={`truncate text-sm font-medium ${playbackError ? 'text-red-400' : 'text-violet-300'}`}
         >
           {playbackError
             ? playbackError
@@ -55,7 +65,7 @@ export default function NowPlayingBar({
         aria-valuenow={Math.round(progress * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1.5 bg-violet-100"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1.5 bg-violet-950"
       >
         <div
           className="h-full bg-violet-500 transition-[width] duration-300 ease-linear"

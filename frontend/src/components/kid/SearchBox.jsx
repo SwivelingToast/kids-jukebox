@@ -1,20 +1,4 @@
-import { useState } from 'react';
-
-export default function SearchBox({ query, onQueryChange }) {
-  const [open, setOpen] = useState(false);
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Search songs"
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl shadow-md active:scale-95"
-      >
-        🔍
-      </button>
-    );
-  }
-
+export default function SearchBox({ query, onQueryChange, onClose }) {
   return (
     <div className="flex w-full items-center gap-3">
       <input
@@ -26,12 +10,9 @@ export default function SearchBox({ query, onQueryChange }) {
         className="h-16 min-w-0 flex-1 rounded-full border-4 border-violet-200 px-6 text-3xl font-semibold text-violet-950 shadow-inner focus:outline-none focus:border-violet-400"
       />
       <button
-        onClick={() => {
-          onQueryChange('');
-          setOpen(false);
-        }}
+        onClick={onClose}
         aria-label="Close search"
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl shadow-md active:scale-95"
+        className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-3xl shadow-md active:scale-95"
       >
         ✕
       </button>
