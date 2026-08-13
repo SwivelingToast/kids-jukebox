@@ -9,3 +9,15 @@ html, body, #root {
 body {
   overflow-x: hidden;
 }
+
+/* Every button gets a brief press animation by default, so any control
+   the user interacts with visibly confirms it received the input - not
+   something that has to be remembered per-component. Individual buttons
+   can still layer their own additional feedback (e.g. the hold-to-skip
+   ring) on top of this. */
+button:not(:disabled) {
+  transition: transform 100ms ease-out;
+}
+button:not(:disabled):active {
+  transform: scale(0.95);
+}

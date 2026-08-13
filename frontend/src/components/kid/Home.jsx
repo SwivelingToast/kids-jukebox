@@ -31,7 +31,6 @@ export default function Home() {
     error: playbackError,
     isPlaying,
     progress,
-    positionMs,
     playTrackUri,
     pausePlayback,
     togglePlayback,
@@ -70,27 +69,28 @@ export default function Home() {
           isPlaying={isPlaying}
           onTogglePlayback={togglePlayback}
           progress={progress}
-          positionMs={positionMs}
         />
         <SearchBox query={query} onQueryChange={setQuery} />
       </div>
       <HiddenSettingsHandle />
 
-      {loading ? (
-        <div className="flex items-center justify-center py-24 text-2xl text-violet-400">
-          Loading songs…
-        </div>
-      ) : (
-        <AlbumGrid
-          tracks={filtered}
-          onSelect={handleSelect}
-          emptyMessage={
-            query
-              ? 'No songs match that search.'
-              : 'No songs yet — ask a grown-up to add some in Settings.'
-          }
-        />
-      )}
+      <div className="mx-4 mb-4 overflow-hidden rounded-3xl border-4 border-violet-200 bg-white/50">
+        {loading ? (
+          <div className="flex items-center justify-center py-24 text-2xl text-violet-400">
+            Loading songs…
+          </div>
+        ) : (
+          <AlbumGrid
+            tracks={filtered}
+            onSelect={handleSelect}
+            emptyMessage={
+              query
+                ? 'No songs match that search.'
+                : 'No songs yet — ask a grown-up to add some in Settings.'
+            }
+          />
+        )}
+      </div>
     </div>
   );
 }

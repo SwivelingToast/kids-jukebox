@@ -36,7 +36,6 @@ export function usePlaybackSDK({ onTrackEnd }) {
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // 0-1, informational only
-  const [positionMs, setPositionMs] = useState(0); // informational only
   const progressRef = useRef({ position: 0, duration: 0, updatedAt: Date.now(), paused: true });
   const playerRef = useRef(null);
   const lastKnownRef = useRef(null); // { uri, position }
@@ -114,16 +113,6 @@ export function usePlaybackSDK({ onTrackEnd }) {
           paused: state.paused,
         };
 
-        // TEMP DEBUG: remove once the "frozen counter" issue is diagnosed
-        console.log('[playback] player_state_changed', {
-          uri: state.track_window.current_track?.uri,
-          name: state.track_window.current_track?.name,
-          position: state.position,
-          duration: state.duration,
-          paused: state.paused,
-          at: new Date().toISOString(),
-        });
-
         const current = { uri: state.track_window.current_track?.uri, position: state.position };
         const prev = lastKnownRef.current;
 
@@ -165,13 +154,11 @@ export function usePlaybackSDK({ onTrackEnd }) {
       const { position, duration, updatedAt, paused } = progressRef.current;
       if (!duration) {
         setProgress(0);
-        setPositionMs(0);
         return;
       }
       const elapsed = paused ? 0 : Date.now() - updatedAt;
       const current = Math.min(position + elapsed, duration);
       setProgress(current / duration);
-      setPositionMs(current);
     }
     tick();
     const interval = setInterval(tick, 500);
@@ -188,8 +175,12 @@ export function usePlaybackSDK({ onTrackEnd }) {
     }
     const accessToken = await getAccessToken();
 
-    // TEMP DEBUG: remove once the "frozen counter" issue is diagnosed
-    console.log('[playback] playTrackUri called', { uri, deviceId: id, at: new Date().toISOString() });
+    // Reset immediately rather than waiting for the SDK's next
+    // player_state_changed event, which lags behind this call by up to a
+    // couple seconds and would otherwise keep showing the previous
+    // track's stale position/progress in the meantime.
+    progressRef.current = { position: 0, duration: 0, updatedAt: Date.now(), paused: true };
+    setProgress(0);
 
     isTransitioningRef.current = true;
     // Safety net: if we never see a confirming "playing" state (e.g. a
@@ -210,7 +201,6 @@ export function usePlaybackSDK({ onTrackEnd }) {
         body: JSON.stringify({ uris: [uri] }),
       }
     );
-    console.log('[playback] play response', playRes.status);
     if (!playRes.ok) {
       const body = await playRes.text().catch(() => '');
       const message = `Failed to start playback: ${playRes.status} ${body}`;
@@ -260,7 +250,6 @@ export function usePlaybackSDK({ onTrackEnd }) {
     error,
     isPlaying,
     progress,
-    positionMs,
     playTrackUri,
     pausePlayback,
     togglePlayback,

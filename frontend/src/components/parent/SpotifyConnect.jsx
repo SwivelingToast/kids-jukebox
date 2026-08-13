@@ -40,7 +40,7 @@ export default function SpotifyConnect() {
           <p className="text-violet-700">Not connected yet. Requires a Spotify Premium account.</p>
           <a
             href="/api/spotify/connect"
-            className="w-fit rounded-lg bg-green-600 px-4 py-2 font-semibold text-white"
+            className="w-fit rounded-lg bg-green-600 px-4 py-2 font-semibold text-white transition-transform active:scale-95"
           >
             Connect Spotify
           </a>
