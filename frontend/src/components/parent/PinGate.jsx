@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
 import PinChangeForm from './PinChangeForm.jsx';
 
@@ -7,8 +7,17 @@ export default function PinGate({ children }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [checkedFresh, setCheckedFresh] = useState(false);
 
-  if (auth.loading) {
+  // Every time this gate is entered (i.e. every navigation to /parent),
+  // force a fresh PIN entry rather than trusting a still-valid session
+  // cookie from a previous visit - a lingering "stay logged in" session
+  // is exactly what let the PIN prompt get skipped after the first visit.
+  useEffect(() => {
+    auth.logout().finally(() => setCheckedFresh(true));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!checkedFresh || auth.loading) {
     return <div className="flex h-full items-center justify-center text-xl">Loading…</div>;
   }
 
