@@ -1,3 +1,13 @@
+// No JS layout measurement (would mean re-measuring every tile on every
+// resize/orientation change) - just pick a smaller size bracket for
+// longer titles so most titles still fit without truncating.
+function titleSizeClass(title) {
+  if (title.length <= 14) return 'text-xl md:text-2xl';
+  if (title.length <= 24) return 'text-lg md:text-xl';
+  if (title.length <= 40) return 'text-base md:text-lg';
+  return 'text-sm md:text-base';
+}
+
 export default function AlbumTile({ track, overlay = true, onTap }) {
   const title = track.name;
 
@@ -16,8 +26,10 @@ export default function AlbumTile({ track, overlay = true, onTap }) {
         )}
 
         {overlay ? (
-          <div className="absolute inset-0 flex items-center justify-center p-3">
-            <p className="line-clamp-2 rounded-xl bg-black/20 px-3 py-2 text-center text-xl font-bold text-white md:text-2xl">
+          <div className="absolute inset-0 flex items-center justify-center p-2">
+            <p
+              className={`line-clamp-3 rounded-xl bg-black/20 px-3 py-2 text-center font-bold text-white ${titleSizeClass(title)}`}
+            >
               {title}
             </p>
           </div>
