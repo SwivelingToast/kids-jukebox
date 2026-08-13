@@ -2,6 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import { getAccessToken } from '../api/spotifyToken.js';
 import { api } from '../api/client.js';
 
+// A freshly-registered Spotify Connect device can briefly 500 on the
+// public /me/player endpoints right after connecting, even though the
+// device is already working at the SDK/websocket level - retry transient
+// server errors a couple of times before giving up.
+async function fetchSpotifyWithRetry(url, options, retries = 2, delayMs = 600) {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, options);
+    if (res.ok || res.status < 500 || attempt >= retries) {
+      return res;
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+}
+
 function loadSdkScript() {
   if (document.getElementById('spotify-player-sdk')) return;
   const script = document.createElement('script');
@@ -182,28 +196,20 @@ export function usePlaybackSDK({ onTrackEnd }) {
     // network hiccup), don't leave end-detection suppressed forever.
     transitionTimeoutRef.current = setTimeout(clearTransitioning, 5000);
 
-    // Reclaim the device before every play call rather than trying to
-    // detect whether something else took it over in the meantime.
-    const transferRes = await fetch('https://api.spotify.com/v1/me/player', {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ device_ids: [id], play: false }),
-    });
-    console.log('[playback] transfer response', transferRes.status);
-    if (!transferRes.ok) {
-      const body = await transferRes.text().catch(() => '');
-      const message = `Failed to transfer playback to this device: ${transferRes.status} ${body}`;
-      console.error(message);
-      setError(message);
-      clearTransitioning();
-      return false;
-    }
-
-    const playRes = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${id}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uris: [uri] }),
-    });
+    // The play endpoint below already transfers playback to whatever
+    // device_id is passed (reclaiming it from another Connect device on
+    // the same account if needed) as part of the same call - a separate
+    // PUT /me/player transfer call is not required, and that endpoint has
+    // been observed to consistently 500 on some accounts/devices, so it's
+    // skipped entirely rather than routed through.
+    const playRes = await fetchSpotifyWithRetry(
+      `https://api.spotify.com/v1/me/player/play?device_id=${id}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uris: [uri] }),
+      }
+    );
     console.log('[playback] play response', playRes.status);
     if (!playRes.ok) {
       const body = await playRes.text().catch(() => '');
@@ -223,7 +229,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
     if (!id) return false;
     const accessToken = await getAccessToken();
 
-    const res = await fetch(
+    const res = await fetchSpotifyWithRetry(
       `https://api.spotify.com/v1/me/player/${paused ? 'pause' : 'play'}?device_id=${id}`,
       {
         method: 'PUT',
