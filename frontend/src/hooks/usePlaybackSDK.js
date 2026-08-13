@@ -239,8 +239,17 @@ export function usePlaybackSDK({ onTrackEnd }) {
   }
 
   // Explicitly stop the device rather than leaving whatever was last
-  // playing running orphaned when there's nothing left queued.
-  const pausePlayback = () => setPaused(true);
+  // playing running orphaned when there's nothing left queued. Unlike a
+  // manual pause (togglePlayback), there's no "current track" to resume
+  // into afterward, so the progress display resets to 0 too.
+  const pausePlayback = async () => {
+    const ok = await setPaused(true);
+    if (ok) {
+      progressRef.current = { position: 0, duration: 0, updatedAt: Date.now(), paused: true };
+      setProgress(0);
+    }
+    return ok;
+  };
   const togglePlayback = () => setPaused(isPlaying);
 
   return {
