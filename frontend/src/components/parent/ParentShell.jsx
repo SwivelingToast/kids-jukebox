@@ -8,15 +8,15 @@ import QueueManager from './QueueManager.jsx';
 import PinChangeForm from './PinChangeForm.jsx';
 
 const TABS = [
-  { id: 'spotify', label: 'Spotify' },
-  { id: 'playlists', label: 'Playlists' },
   { id: 'songs', label: 'Songs' },
+  { id: 'playlists', label: 'Playlists' },
   { id: 'queue', label: 'Queue' },
+  { id: 'spotify', label: 'Spotify' },
   { id: 'pin', label: 'Change PIN' },
 ];
 
 export default function ParentShell() {
-  const [tab, setTab] = useState('spotify');
+  const [tab, setTab] = useState('songs');
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -64,7 +64,7 @@ export default function ParentShell() {
         {tab === 'playlists' ? <PlaylistManager /> : null}
         {tab === 'songs' ? <ManualOverrides /> : null}
         {tab === 'queue' ? <QueueManager /> : null}
-        {tab === 'pin' ? <PinChangeForm onDone={() => setTab('spotify')} /> : null}
+        {tab === 'pin' ? <PinChangeForm onDone={() => setTab('songs')} /> : null}
       </div>
     </div>
   );
