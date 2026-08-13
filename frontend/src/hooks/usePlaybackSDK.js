@@ -100,6 +100,16 @@ export function usePlaybackSDK({ onTrackEnd }) {
           paused: state.paused,
         };
 
+        // TEMP DEBUG: remove once the "frozen counter" issue is diagnosed
+        console.log('[playback] player_state_changed', {
+          uri: state.track_window.current_track?.uri,
+          name: state.track_window.current_track?.name,
+          position: state.position,
+          duration: state.duration,
+          paused: state.paused,
+          at: new Date().toISOString(),
+        });
+
         const current = { uri: state.track_window.current_track?.uri, position: state.position };
         const prev = lastKnownRef.current;
 
@@ -164,6 +174,9 @@ export function usePlaybackSDK({ onTrackEnd }) {
     }
     const accessToken = await getAccessToken();
 
+    // TEMP DEBUG: remove once the "frozen counter" issue is diagnosed
+    console.log('[playback] playTrackUri called', { uri, deviceId: id, at: new Date().toISOString() });
+
     isTransitioningRef.current = true;
     // Safety net: if we never see a confirming "playing" state (e.g. a
     // network hiccup), don't leave end-detection suppressed forever.
@@ -176,6 +189,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ device_ids: [id], play: false }),
     });
+    console.log('[playback] transfer response', transferRes.status);
     if (!transferRes.ok) {
       const body = await transferRes.text().catch(() => '');
       const message = `Failed to transfer playback to this device: ${transferRes.status} ${body}`;
@@ -190,6 +204,7 @@ export function usePlaybackSDK({ onTrackEnd }) {
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ uris: [uri] }),
     });
+    console.log('[playback] play response', playRes.status);
     if (!playRes.ok) {
       const body = await playRes.text().catch(() => '');
       const message = `Failed to start playback: ${playRes.status} ${body}`;
